@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block content %}
+<html>
+
+<head>
+  <title>Registru intrari-iesiri</title>
+</head>
+
+<body onload="verif()">
+  <script>
+    function verif() {
+      var userRole = "{{ session['user']['role'] }}";
+      if (userRole === "admin") {
+        window.location.href = "/admin/dashboard";
+      }
+    }
+  </script>
+
+  <div class="card-wrapper">
+    <div class="card">
+      <h2 class="center">Adaugă un rand nou in registru</h2>
+      <p>
+      <form name="entry_form">
+        <label for="name">Nr. de inregistrare</label>
+
+        <label for="name">Data</label>
+        <input type="date" name="data" class="field" required>
+
+        <label for="name">Nr. și data documentului</label>
+        <input type="text" name="nr_si_data" class="field" required>
+
+        <label for="name">De unde provine documentul</label>
+        <input type="text" name="provine_doc" class="field" required>
+
+        <label for="name">Continut pe scurt al documentului</label>
+        <input type="text" name="cont_scurt" class="field">
+
+        <label for="name">Compartimentul căruia i s-a repartizat documentul si semnătura de primire</label>
+        <input type="text" name="comp_repartizat" class="field" required>
+
+        <label for="name">Data expedierii</label>
+        <input type="date" name="data_expedierii" class="field" required>
+
+        <label for="name">Destinatar</label>
+        <input type="text" name="destinatar" class="field" required>
+
+        <label for="name">Nr. de inregistrare la care se conex. doc. si indic. dos.</label>
+        <input type="text" name="nr_inregistrare" class="field" required>
+
+        <input type="submit" value="Trimite inregistrare" class="btn">
+      </form>
+
+      </p>
+
+    </div>
+    <div class="card">
+      <h2 class="center">Your Info</h2>
+      <p>
+        <strong>Name:</strong> {{ session['user']['name'] }}<br>
+        <strong>Email:</strong> {{ session['user']['email'] }}<br>
+        <strong>Role:</strong> {{ session['user']['role'] }}
+      <p class="center">You are currently logged in.</p>
+
+      <div class="center">
+        <a href="/user/signout" class="btn btn--secondary">Sign Out</a>
+        </p>
+
+      </div>
+</body>
+
+</html>
+
+{% endblock %}

@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!DOCTYPE html>
+<html>
+
+<body onload="verif()">
+    <script>
+        function verif() {
+            var userRole = "{{ session['user']['role'] }}";
+            if (userRole === "user") {
+                window.location.href = "/user/dashboard";
+            }
+        }
+    </script>
+
+    <table>
+        <tr>
+            <th>Header 1</th>
+            <th>Header 2</th>
+            <th>Header 4</th>
+            <th>Header 5</th>
+            <th>Header 6</th>
+            <th>Header 7</th>
+            <th>Header 8</th>
+        </tr>
+        <tr>
+            <td>Nr de inregistrare</td>
+            <td>Asta</td>
+            <td>3450</td>
+        </tr>
+    </table>
+
+
+    <div class="card-wrapper">
+        <div class="card">
+            <h2 class="center">Adaugă un rand nou in registru</h2>
+            <p>
+            <form name="entry_form">
+                <label for="name">Nr. de inregistrare</label>
+
+                <label for="name">Data</label>
+                <input type="date" name="data" class="field" required>
+
+                <label for="name">Nr. și data documentului</label>
+                <input type="text" name="nr_si_data" class="field">
+
+                <label for="name">De unde provine documentul</label>
+                <input type="text" name="provine_doc" class="field">
+
+                <label for="name">Continut pe scurt al documentului</label>
+                <input type="text" name="cont_scurt" class="field">
+
+                <label for="name">Compartimentul căruia i s-a repartizat documentul si semnătura de primire</label>
+                <input type="text" name="comp_repartizat" class="field">
+
+                <label for="name">Data expedierii</label>
+                <input type="date" name="data_expedierii" class="field">
+
+                <label for="name">Destinatar</label>
+                <input type="text" name="destinatar" class="field">
+
+                <label for="name">Nr. de inregistrare la care se conex. doc. si indic. dos.</label>
+                <input type="text" name="nr_inregistrare" class="field">
+
+                <p class="error error--hidden"></p>
+
+                <input type="submit" value="Trimite inregistrare" class="btn">
+            </form>
+            </p>
+        </div>
+
+        <div class="card">
+            <h1 class="center">Crează un cont</h1>
+            <form name="signup_form">
+                <label for="name">Name</label>
+                <input type="text" name="name" class="field" required>
+
+                <label for="email">Email</label>
+                <input type="email" name="email" class="field" required>
+
+                <label for="password">Password</label>
+                <input type="password" name="password" class="field" required>
+
+                <label for="admin">Admin</label>
+                <input type="checkbox" name="admin">
+
+                <p class="error error--hidden"></p>
+
+                <input type="submit" value="Crează" class="btn">
+            </form>
+        </div>
+
+
+        <div class="card">
+            <h2 class="center">Export Excel</h2>
+            <label for="yearSelect">Select a Year:</label>
+            <select id="yearSelect">
+
+            </select>
+            <div class="center">
+                <p class="error error--hidden"></p>
+                <a id="yearLink" target="_blank" class="btn btn--seconda">Download</a>
+            </div>
+
+            <script>
+                // Get the select element by its ID
+                var yearSelect = document.getElementById("yearSelect");
+
+                // Define the start and end years for the range
+                var startYear = 2023;
+                var endYear = 2040;
+
+                // Populate the options with the range of years
+                for (var year = startYear; year <= endYear; year++) {
+                    var option = document.createElement("option");
+                    option.text = year;
+                    option.value = year;
+                    yearSelect.add(option);
+                }
+
+                const yearLink = document.getElementById("yearLink");
+
+                yearSelect.addEventListener("change", function () {
+                    const selectedYear = yearSelect.value;
+                    yearLink.href = `/table/download/${selectedYear}`; // Replace example.com with your specific URL.
+                });
+            </script>
+        </div>
+
+        <div class="card">
+            <h2 class="center">Your Info</h2>
+            <p>
+                <strong>Name:</strong> {{ session['user']['name'] }}<br>
+                <strong>Email:</strong> {{ session['user']['email'] }}<br>
+                <strong>Role:</strong> {{ session['user']['role'] }}<br>
+            </p>
+            <p class="center">You are currently logged in.</p>
+            <div class="center">
+                <a href="/user/signout" class="btn btn--secondary">Sign Out</a>
+            </div>
+        </div>
+    </div>
+
+
+</body>
+
+</html>
+{% endblock %}
