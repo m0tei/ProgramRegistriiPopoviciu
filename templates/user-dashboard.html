@@ -7,14 +7,26 @@
   <title>Registru intrari-iesiri</title>
 </head>
 
-<body onload="verif()">
+<body>
   <script>
-    function verif() {
-      var userRole = "{{ session['user']['role'] }}";
-      if (userRole === "admin") {
-        window.location.href = "/admin/dashboard";
-      }
-    }
+    fetch('/table/last_element')
+      .then(response => {
+        // Check if the response is OK (status 200)
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        // Parse the JSON response
+        return response.json();
+      })
+      .then(data => {
+        // Once JSON data is fetched, do something with it
+        console.log(data);
+        const lastElementId = document.getElementById('last_element');
+        lastElementId.textContent = data;
+      })
+      .catch(error => {
+        console.error('There was a problem with your fetch operation:', error);
+      });
   </script>
 
   <div class="card-wrapper">
@@ -22,7 +34,8 @@
       <h2 class="center">Adaugă un rand nou in registru</h2>
       <p>
       <form name="entry_form">
-        <label for="name">Nr. de inregistrare</label>
+        <label for="name">Nr. de inregistrare al ultimului element</label>
+        <h5 id="last_element"></h5>
 
         <label for="name">Data</label>
         <input type="date" name="data" class="field" required>

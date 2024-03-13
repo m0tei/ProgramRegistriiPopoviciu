@@ -1,29 +1,43 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <div class="card-wrapper">
-      
-    </div>
 
-    <div class="card">
 
-      <h1 class="center">Log In</h1>
+<style>
+  .logo {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: auto;
+    margin-bottom: auto;
+    width: 20%;
+    height: 20%;
+  }
+</style>
 
-      <form name="login_form">
+<div class="card-wrapper">
+  <div class="card">
+    <h1 class="center">Log In</h1>
 
-        <label for="email">Email</label>
-        <input type="email" name="email" class="field" required>
+    <form name="login_form">
 
-        <label for="password">Password</label>
-        <input type="password" name="password" class="field" required>
+      <label for="email">Email</label>
+      <input type="email" name="email" class="field" required>
 
-        <p class="error error--hidden"></p>
+      <label for="password">Password</label>
+      <input type="password" name="password" class="field" required>
 
-        <input type="submit" value="Log In" class="btn">
-      
-      </form>
-      
-    </div>
-  
+      <p class="error error--hidden"></p>
+
+      <input type="submit" value="Log In" class="btn">
+
+    </form>
+
   </div>
+
+  <div class="logo">
+    <img src="/static/css/litp_logo.png" alt="Description of the image">
+  </div>
+  
+</div>
 {% endblock %}

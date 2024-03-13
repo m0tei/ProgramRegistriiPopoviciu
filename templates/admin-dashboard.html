@@ -4,41 +4,59 @@
 <!DOCTYPE html>
 <html>
 
-<body onload="verif()">
+<body>
+
+    <div style="padding: 10px;">
+    </div>
+
+    <div class="scroll-table">  
+        <table class="table">
+            <tr class="theader">
+                <th>#</th>
+                <th>Data inregistrarii</th>
+                <th>Nr. si data documentului</th>
+                <th>De unde povine documentul</th>
+                <th>Continutul documentului</th>
+                <th>Repartizare</th>
+                <th>Data Expedierii</th>
+                <th>Destinatar</th>
+                <th>Nr. de inreg. conex. doc. indc. dos.</th>
+                <th>Delete</th>
+            </tr>
+        </table>
+    </div>
+
     <script>
-        function verif() {
-            var userRole = "{{ session['user']['role'] }}";
-            if (userRole === "user") {
-                window.location.href = "/user/dashboard";
+        fetch('/table/last_element')
+          .then(response => {
+            // Check if the response is OK (status 200)
+            if (!response.ok) {
+              throw new Error('Network response was not ok');
             }
-        }
-    </script>
-
-    <table>
-        <tr>
-            <th>Header 1</th>
-            <th>Header 2</th>
-            <th>Header 4</th>
-            <th>Header 5</th>
-            <th>Header 6</th>
-            <th>Header 7</th>
-            <th>Header 8</th>
-        </tr>
-        <tr>
-            <td>Nr de inregistrare</td>
-            <td>Asta</td>
-            <td>3450</td>
-        </tr>
-    </table>
-
+            // Parse the JSON response
+            return response.json();
+          })
+          .then(data => {
+            // Once JSON data is fetched, do something with it
+            console.log(data);
+            const lastElementId = document.getElementById('last_element');
+            lastElementId.textContent = data;
+          })
+          .catch(error => {
+            console.error('There was a problem with your fetch operation:', error);
+          });
+      </script>
 
     <div class="card-wrapper">
         <div class="card">
             <h2 class="center">Adaugă un rand nou in registru</h2>
             <p>
             <form name="entry_form">
-                <label for="name">Nr. de inregistrare</label>
+                <label for="name">Nr. de inregirare al ultimului element</label>
+                <h5 id="last_element"></h5>
 
+                <label for="name">Nr. de inregistrare (optional)</label>
+                <input type="number" name="id" class="field">
                 <label for="name">Data</label>
                 <input type="date" name="data" class="field" required>
 
@@ -94,36 +112,91 @@
 
         <div class="card">
             <h2 class="center">Export Excel</h2>
-            <label for="yearSelect">Select a Year:</label>
-            <select id="yearSelect">
 
-            </select>
+            <label for="yearSelect">Select a Year:</label>
+            <select id="yearSelect"></select>
+
             <div class="center">
-                <p class="error error--hidden"></p>
-                <a id="yearLink" target="_blank" class="btn btn--seconda">Download</a>
+                <div id="error-message" style="color: red;"></div>
+                <a id="downloadButton" class="btn btn--secondary">Download</a>
             </div>
 
             <script>
-                // Get the select element by its ID
-                var yearSelect = document.getElementById("yearSelect");
+                async function populateSelect() {
+                    try {
+                        const response = await fetch('/table/collections');
+                        const jsonData = await response.json();
+                        var selectElement = document.getElementById("yearSelect");
 
-                // Define the start and end years for the range
-                var startYear = 2023;
-                var endYear = 2040;
-
-                // Populate the options with the range of years
-                for (var year = startYear; year <= endYear; year++) {
-                    var option = document.createElement("option");
-                    option.text = year;
-                    option.value = year;
-                    yearSelect.add(option);
+                        // Iterate through the JSON data and create option elements
+                        jsonData.forEach(function (option) {
+                            var optionElement = document.createElement("option");
+                            optionElement.value = option;
+                            optionElement.text = option;
+                            selectElement.appendChild(optionElement);
+                        });
+                    } catch (error) {
+                        console.error('Error fetching collections:', error);
+                    }
                 }
 
-                const yearLink = document.getElementById("yearLink");
+                //delete_row
+                async function deleteRow(row) {
+                    try {
+                        $.ajax({
+                            url: "/entry/delete/" + row,
+                            type: "DELETE",
+                            success: function () {
+                                location.reload(true);
+                            },
+                        });
+                    }
+                    catch (error) {
+                        console.error('Error deleting table contents:', error);
+                    }
+                }
 
-                yearSelect.addEventListener("change", function () {
-                    const selectedYear = yearSelect.value;
-                    yearLink.href = `/table/download/${selectedYear}`; // Replace example.com with your specific URL.
+                //populate table
+                async function populateTable() {
+                    try {
+                        const table = document.querySelector('.table');
+                        const response = await fetch('/table/show');
+                        const jsonData = await response.json();
+
+                        jsonData.forEach(item => {
+                            const row = document.createElement('tr');
+                            row.classList.add('row');
+                            row.innerHTML = `<td class="cell">${item._id}</td><td class="cell">${item.data_inregistrarii}</td><td class="cell">${item.nr_si_data_documentului}</td><td class="cell">${item.de_unde_provine_documentul}</td><td class="cell">${item.continutul_documentului}</td><td class="cell">${item.repartizare}</td><td class="cell">${item.data_expedierii}</td><td class="cell">${item.destinatar}</td><td class="cell">${item.nr_de_inregistrare_conex_doc_indic_dos}</td> <td class="cell"><button class="delete-btn" onclick="deleteRow('${item._id}')"> <i class="fa fa-trash-o" style="font-size:24px;color:white"> </i></button></td>`;
+                            table.appendChild(row);
+                        });
+
+
+                    } catch (error) {
+                        console.error('Error fetching table contents:', error);
+                    }
+                }
+                //populate main objects
+                populateTable();
+                populateSelect();
+
+                //download action
+                document.getElementById("downloadButton").addEventListener("click", function () {
+                    var selectedOption = document.getElementById("yearSelect").value;
+                    var errorMessageElement = document.getElementById('error-message');
+                    console.log(selectedOption);
+                    $.ajax({
+                        type: "GET",
+                        url: "/table/download/",
+                        data: { "selectedOption": selectedOption },
+                        contentType: "application/json;charset=UTF-8",
+                        success: function (response) {
+                            errorMessageElement.textContent = "";
+                            window.location.href = "/table/download/" + selectedOption;
+                        },
+                        error: function (resp) {
+                            errorMessageElement.textContent = "Table not found";
+                        }
+                    });
                 });
             </script>
         </div>
@@ -142,7 +215,7 @@
         </div>
     </div>
 
-
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </body>
 
 </html>

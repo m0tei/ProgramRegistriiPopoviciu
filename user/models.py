@@ -3,8 +3,10 @@ from passlib.hash import pbkdf2_sha256
 from app import db
 import pymongo
 import uuid
+from datetime import datetime as dt
 import datetime
 import openpyxl
+import os
 
 today_date = datetime.date.today()
 current_year = str(today_date.year)
@@ -16,6 +18,7 @@ class User:
     del user['password']
     session['logged_in'] = True
     session['user'] = user
+    session['role']=user['role']
     return jsonify(user), 200
 
   def signup(self):
@@ -64,60 +67,122 @@ class User:
     
     return jsonify({ "error": "Invalid login credentials" }), 401
   
-
 class Table:
+  def showTable(self):
+    last_entries_cursor = this_year_db.find().sort([("_id", pymongo.DESCENDING)]).limit(100)
+    last_entries_list = list(last_entries_cursor)
+
+    return jsonify(last_entries_list), 200;
+
+
+  def collectionList(self):
+    try:
+      collections = db.list_collection_names()
+      if 'users' in collections:
+        collections.remove('users')
+      return jsonify(collections)
+    except Exception as e:
+        return jsonify({"error": f"Error fetching collections: {e}"}),
+  
+  def verifyDownload(self):
+    verifyYear = request.args.get('selectedOption')
+  
+    if  verifyYear in db.list_collection_names():
+      print("exist")
+      return "table found", 200
+    else:
+      return jsonify({ "error": "Table not found!" }), 404
+
   def download(self,year):
     workbook = openpyxl.Workbook()
     sheet = workbook.active
     specific_year = getattr(db, year, None)
     all_documents = specific_year.find()
-
-    if(all_documents):
-      return render_template('error.html', year=year)
     
     header = ["ID","Data", "Nr. și data documentului", "De unde provine documentul", "Continut pe scurt", "Compartiment repartzat", "Data expedierii", "Destinatar", "Nr. de inregistrare la care se conex. doc. si indic. dos."]
 
     sheet.append(header)
-
+    prevline=0
     for line in all_documents:
+      while(prevline+1!=line["_id"]):
+        empty_line={}
+        sheet.append(empty_line)
+        prevline+=1
+    
       del line["user"]
       del line["date"]
       line_formated = list(line.values())
       sheet.append(line_formated)
-        
+      prevline=line["_id"]
 
-    workbook.save(str(datetime.date.today()) + ".xlsx")
+
+    folder_path = "excel/"
+    file_name = str(datetime.date.today()) + ".xlsx"
+    file_path = os.path.join(folder_path, file_name)
+
+    workbook.save(file_path)
 
     workbook.close()
 
-    file_path = str(datetime.date.today()) +".xlsx"
-
     return send_file(file_path, as_attachment=True),200
+
+  def last_element(self):
+    last_document = this_year_db.find_one(sort=[("_id", pymongo.DESCENDING)])
+    response = str(last_document['_id']) + '/' + last_document['data_inregistrarii']
+
+    if(response):
+      return jsonify(response),200
+    else:
+      return jsonify({ "error": "Error giving last element" }), 400
 
 class Entry:
   def add(self):
-      # find the last id tag
-      last_document = this_year_db.find_one(sort=[("_id", pymongo.DESCENDING)])
-      if(last_document):
-        last_id = last_document['_id']
+      date_string = request.form.get('data')
+      yearSelected = dt.strptime(date_string, "%Y-%m-%d")
+      year_selected = getattr(db, str(yearSelected.year), None)
+
+      if(today_date.year < yearSelected.year):
+        return jsonify({ "error": "Entry is in the future!" }), 400
+      
+      id_entry=request.form.get('id')
+      if(id_entry==''):
+        last_document = year_selected.find_one(sort=[("_id", pymongo.DESCENDING)])
+        if(last_document):
+          last_id = last_document['_id']
+        else:
+          last_id = 0
+        last_id = last_id+1;
+        print(last_id)
       else:
-        last_id = 0
+          last_id=int(id_entry);
+      
+      if(year_selected.find_one({"id":last_id})):
+        self.update_entry()
+        return
 
       entry = {
-        "_id": last_id + 1,
+        "_id": last_id,
         "user": session['user'],
         "date": str(datetime.date.today()),
         "data_inregistrarii": str(request.form.get('data')),
-        "nr_și_data_documentului ": request.form.get('nr_si_data'),
+        "nr_si_data_documentului": request.form.get('nr_si_data'),
         "de_unde_provine_documentul": request.form.get('provine_doc'),
         "continutul_documentului": request.form.get('cont_scurt'),
         "repartizare": request.form.get('comp_repartizat'),
         "data_expedierii": str(request.form.get('data_expedierii')),
         "destinatar": request.form.get('destinatar'),
-        "nr_de_inregistrare_conex_doc_indic_dos.": request.form.get('nr_inregistrare'),
+        "nr_de_inregistrare_conex_doc_indic_dos": request.form.get('nr_inregistrare'),
       }
 
-      if(this_year_db.insert_one(entry)):
+      if(year_selected.insert_one(entry)):
         return jsonify({ "error": "Entry added" }), 200
       
-      return jsonify({ "error": "Entry added failed!" }), 400
+      return jsonify({ "error": "Entry allready exists!" }), 400
+
+  def delete(seld, id):
+    response = this_year_db.delete_one({'_id': int(id)})
+    
+    if response.deleted_count == 1:
+      return jsonify({'message': 'Entry deleted successfully'}), 200
+    else:
+      return jsonify({'error': 'Entry not found'}), 404
