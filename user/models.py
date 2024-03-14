@@ -74,12 +74,13 @@ class Table:
 
     return jsonify(last_entries_list), 200;
 
-
   def collectionList(self):
     try:
       collections = db.list_collection_names()
       if 'users' in collections:
         collections.remove('users')
+      if "delete_me" in collections:
+        collections.remove("delete_me")
       return jsonify(collections)
     except Exception as e:
         return jsonify({"error": f"Error fetching collections: {e}"}),
