@@ -1,0 +1,45 @@
+services:
+  webapp:
+    image: m0tei/registry:latest
+    container_name: webapp
+    restart: always
+    ports:
+     - '80:5000'
+    environment: 
+     - MONGO_DB_HOST=mongo
+    volumes:
+     - app_data:/app
+    networks:
+     - db_network
+
+  mongo:
+    image: mongodb/mongodb-community-server:latest
+    container_name: mongo
+    restart: always
+    networks:
+      - db_network
+    volumes:
+      - db_data:/data/db
+
+  mongo_express:
+    image: mongo-express:latest
+    container_name: mongo_express
+    restart: always
+    ports:
+      - '8081:8081'
+    environment:
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: admin
+      ME_CONFIG_MONGODB_SERVER: mongo
+      ME_CONFIG_MONGODB_PORT: "27017"
+    networks:
+      - db_network
+
+volumes:
+  db_data:
+  app_data:
+
+networks:
+  db_network:
+    name: db_network
+

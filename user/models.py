@@ -133,7 +133,9 @@ class Table:
 
   def last_element(self):
     last_document = this_year_db.find_one(sort=[("_id", pymongo.DESCENDING)])
-    response = str(last_document['_id']) + '/' + last_document['data_inregistrarii']
+
+    if(last_document!=None):
+      response = str(last_document['_id']) + '/' + last_document['data_inregistrarii']
 
     if(response):
       return jsonify(response),200
