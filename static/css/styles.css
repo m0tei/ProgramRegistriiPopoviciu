@@ -112,8 +112,7 @@ label {
   overflow-y: auto; /* Creează o bara de derulare verticală atunci când este necesar */ 
   scroll-snap-type: y mandatory;
 
-  border-radius: 10px;
-  box-shadow: rgba(0,0,0,0.15); /* Margini rotunjite pentru tabel */
+ /* Margini rotunjite pentru tabel */
 }
 
 .theader {
@@ -144,7 +143,9 @@ label {
   width: 85%;
   border-collapse: collapse;
   margin: 0 auto; 
-  
+
+  border-radius: 10px;
+  box-shadow: rgba(0,0,0,0.15);
 }
 
 th{

@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, session, redirect, send_file, render_template
+from flask import Flask, jsonify, request, session, redirect, send_file, render_template, make_response
 from passlib.hash import pbkdf2_sha256
 from app import db
 import pymongo
@@ -6,7 +6,7 @@ import uuid
 from datetime import datetime as dt
 import datetime
 import openpyxl
-import os
+import tempfile
 
 today_date = datetime.date.today()
 current_year = str(today_date.year)
@@ -117,15 +117,19 @@ class Table:
       prevline=line["_id"]
 
 
-    folder_path = "excel/"
-    file_name = str(datetime.date.today()) + ".xlsx"
-    file_path = os.path.join(folder_path, file_name)
+    with tempfile.NamedTemporaryFile(suffix='.xlsx', delete=False) as temp:
+        # Save workbook to the temporary file
+        workbook.save(temp.name)
 
-    workbook.save(file_path)
+        # Get the absolute path of the temporary file
+        temp_path = temp.name
 
-    workbook.close()
+    attachmentFilename = f"registru_{today_date}_{year}.xlsx"
+    response = make_response(send_file(temp.name, as_attachment=True))
+    response.headers['Content-Disposition'] = f'attachment; filename={attachmentFilename}'
 
-    return send_file(file_path, as_attachment=True),200
+    # Send the file to the client
+    return response, 200
 
   def last_element(self):
     last_document = this_year_db.find_one(sort=[("_id", pymongo.DESCENDING)])
